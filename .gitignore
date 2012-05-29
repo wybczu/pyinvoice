@@ -1,0 +1,7 @@
+*~
+*.log
+*.pot
+*.pyc
+*.sqlite
+documents/
+local_settings.py

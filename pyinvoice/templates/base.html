@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>pyInvoice</title>
+		<meta name="author" content="Łukasz Szczęsny">
+		<link href="{{ STATIC_URL }}/css/bootstrap.css" rel="stylesheet">
+		<link href="{{ STATIC_URL }}/css/bootstrap-responsive.css" rel="stylesheet">
+		<link href="{{ STATIC_URL }}/css/style.css" rel="stylesheet">
+		<!--[if lt IE 9]>
+			<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+		{% block js %}{% endblock %}
+		{% block css %}{% endblock %}
+	</head>
+	<body>
+		<div class="container">
+			<div id="header">
+				<h1>pyInvoice</h1>
+			</div>
+			<ul class="breadcrumb">
+				{% for b in request.breadcrumbs %}
+					<li {% if forloop.last %} class="active" {% endif %}>
+						<a href="{{ b.url }}">{{ b.name }}</a>{% if not forloop.last %}<span class="divider">/</span>{% endif %}
+					</li>
+				{% endfor %}
+			</ul>
+			{% block content %}{% endblock %}
+		</div>
+	</body>
+</html>
