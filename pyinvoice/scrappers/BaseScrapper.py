@@ -2,33 +2,39 @@
 # -*- coding: utf8 -*-
 
 from django.conf import settings
-from pyinvoice import  models
+from pyinvoice import models
 from django.core.files.base import ContentFile
 import uuid
 from lxml import etree
-import cookielib, urllib2, urllib
-import time, random
+import cookielib
+import urllib2
+import urllib
+import time
+import random
 from urlparse import urljoin
 import logging
 
 logger = logging.getLogger(__name__)
 
+
 class BaseScrapper(object):
 
     user_agent = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.11) Gecko/20101012 Firefox/3.6.11'
     referer = None
-    last_path = None # domyslny referer
+    last_path = None  # domyslny referer
     base_url = None
-    
+
     def __init__(self):
         self.cookie_jar = cookielib.CookieJar()
-        self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookie_jar))
-    
-    def get(self, path, params = None, referer = None, headers = None):
+        self.opener = urllib2.build_opener(
+            urllib2.HTTPCookieProcessor(self.cookie_jar))
+
+    def get(self, path, params=None, referer=None, headers=None):
         if settings.RANDOMIZE_REQUEST_DELAY:
-            delay = random.uniform(0.5*settings.REQUEST_DELAY, 1.5*settings.REQUEST_DELAY) 
+            delay = random.uniform(
+                0.5 * settings.REQUEST_DELAY, 1.5 * settings.REQUEST_DELAY)
         else:
-            delay = settings.REQUEST_DELAY 
+            delay = settings.REQUEST_DELAY
         time.sleep(delay)
 
         if referer is not None:
@@ -39,10 +45,12 @@ class BaseScrapper(object):
             ('User-Agent', self.user_agent),
         ]
         if headers is not None:
-            for header in headers: self.opener.addheaders.append(header)
+            for header in headers:
+                self.opener.addheaders.append(header)
         if self.referer is not None:
-            self.opener.addheaders.append(('Referer', urljoin(self.base_url, self.referer)))
-    	self.last_path = path
+            self.opener.addheaders.append(
+                ('Referer', urljoin(self.base_url, self.referer)))
+        self.last_path = path
         data = None
         if params is not None:
             if isinstance(params, dict):
@@ -79,6 +87,7 @@ class BaseScrapper(object):
         document = models.Document()
         document.invoice = invoice
         document.title = title
-        document.document_file.save('%s.pdf' % uuid.uuid4(), ContentFile(data.read()), save=True)
+        document.document_file.save(
+            '%s.pdf' % uuid.uuid4(), ContentFile(data.read()), save=True)
         document.save()
         logger.info("Downloaded file for invoice %s: %s (size: %s)", invoice.number, document.document_file.name, document.document_file.size)

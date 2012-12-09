@@ -21,4 +21,5 @@ class Command(BaseCommand):
         for scrapper in settings.INVOICE_SCRAPPERS:
             logger.info("Firing %s", scrapper)
             scrapper_obj = self._get_scrapper(scrapper)()
-            scrapper_obj.download_invoices(settings.INVOICE_SCRAPPERS_CONFIGURATION[scrapper])
+            scrapper_obj.download_invoices(
+                settings.INVOICE_SCRAPPERS_CONFIGURATION[scrapper])

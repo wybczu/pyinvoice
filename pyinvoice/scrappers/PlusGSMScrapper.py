@@ -9,6 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class PlusGSMScrapper(BaseScrapper):
 
     company_name = "Plus GSM"
@@ -20,17 +21,19 @@ class PlusGSMScrapper(BaseScrapper):
     def download_invoices(self, configuration):
         self.get('/ebok-web/basic/loginStep1.action')
         ret = self.get(
-            '/ebok-web/basic/loginStep2.action', 
-            params = {'msisdn' : configuration['username'], 'password' : configuration['password']}
+            '/ebok-web/basic/loginStep2.action',
+            params={'msisdn': configuration['username'],
+                    'password': configuration['password']}
         )
 
         if "wystąpił błąd aplikacji" in ret.read():
             logger.error("I can't sign in :(")
             return
 
-        parser = etree.HTMLParser() 
+        parser = etree.HTMLParser()
         tree = etree.parse(
-            self.get('/ebok-web/spectrum/payments/showPaymentsHistory.action', referer = '/ebok-web/spectrum/welcome.action'), 
+            self.get('/ebok-web/spectrum/payments/showPaymentsHistory.action',
+                     referer='/ebok-web/spectrum/welcome.action'),
             parser
         )
 
@@ -43,16 +46,18 @@ class PlusGSMScrapper(BaseScrapper):
                 continue
 
             if td2[0].text.strip() == "Faktura" and td7[0].text.strip() == "Faktura":
-                # kolumna "Numer faktury" 
+                # kolumna "Numer faktury"
                 td5 = tr.xpath('./td[5]/strong')
                 # kolumna "Kwota (z VAT)"
                 td6 = tr.xpath('./td[6]/strong')
                 # kolumna "Dokumenty pdf"
-                td7 = tr.xpath("./td[7]/a[contains(@onclick, 'openWindow')]/@onclick")
+                td7 = tr.xpath(
+                    "./td[7]/a[contains(@onclick, 'openWindow')]/@onclick")
 
                 position_on_list = td7[0].split("'")[1].split("=")[1]
                 invoice_id = td5[0].text.strip()
-                total_gross = re.sub("[^0-9,]", "", td6[0].text.strip()).replace(',', '.')
+                total_gross = re.sub(
+                    "[^0-9,]", "", td6[0].text.strip()).replace(',', '.')
 
                 invoice = self.create_invoice(invoice_id, total_gross)
 
@@ -63,5 +68,3 @@ class PlusGSMScrapper(BaseScrapper):
                     # rachunek szczegolowy
                     self.get('/ebok-web/spectrum/payments/downloadInvoiceDetails.action?positionOnList=' + str(position_on_list))
                     self.save_document(invoice, self.get('/ebok-web/spectrum/brpDocumentDownload/downloadDocument.action'), title="Rachunek szczegółowy")
-
-
