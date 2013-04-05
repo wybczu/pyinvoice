@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<ul>
+	{% for company in object_list %}
+	<li><a href="{% url invoices company.id %}">{{ company.name }}</a>
+	{% endfor %}
+</ul>
+{% endblock %}
