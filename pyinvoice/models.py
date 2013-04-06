@@ -17,4 +17,4 @@ class Invoice(models.Model):
 class Document(models.Model):
     invoice = models.ForeignKey(Invoice)
     title = models.CharField(max_length=100)
-    document_file = models.FileField(upload_to='documents/%Y/%m/%d')
+    document_file = models.FileField(upload_to='%Y/%m/%d')

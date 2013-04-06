@@ -1,37 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-from lxml import etree
-import cookielib
-import urllib2
-import urllib
 import time
-import random
 from urlparse import urljoin
-import os.path
 import logging
 from BaseScrapper import BaseScrapper
 import re
-import logging
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
-
-UPC_XMLNS = {
-    'soap': 'http://schemas.xmlsoap.org/soap/envelope',
-    'ns4': "http://domain.ebok.upc.com/jaws",
-    'ns3': "http://services.ebok.upc.com/jaws",
-    'ns2': "http://ebok.service",
-}
-
-UPC_SOAP_INVOICES_TPL = """
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <SOAP-ENV:Body>
-        <tns:getClientInvoices xmlns:tns="http://ebok.service">
-            <tns:String_1>%s</tns:String_1>
-        </tns:getClientInvoices>
-    </SOAP-ENV:Body>
-</SOAP-ENV:Envelope>
-"""
 
 
 class UPCScrapper(BaseScrapper):
@@ -44,51 +21,46 @@ class UPCScrapper(BaseScrapper):
 
     def download_invoices(self, configuration):
 
-        parser = etree.HTMLParser()
-        self.get('/')
-        tree = etree.parse(self.get('/'), parser)
+        res = self.get('/')
 
-        # form action
-        login_form = tree.xpath("//form")[0]
-        login_url = login_form.attrib["action"].replace(self.base_url, '')
+        soup = BeautifulSoup(res.content, from_encoding=res.encoding)
 
-        ret = self.get(
+        login_url = soup.form['action'].replace(self.base_url, '')
+
+        res = self.get(
             login_url,
             params={
-                '_58_login': configuration['username'],
-                '_58_password': configuration['password'],
-                '_58_redirect': ''
+                '_58a_login': configuration['username'],
+                '_58a_password': configuration['password'],
+                '_58a_redirect': ''
             }
         )
 
-        match = re.search(r"sessionID=([a-z0-9]*).*", ret.read())
-        if match:
-            session_id = match.group(1)
+        if not res.url == urljoin(self.base_url, 'ebok'):
+            logger.error("I can't sign in :(")
+            return
 
-        # soap request
-        tree = etree.parse(
-            self.get(
-                '/upc-eBok-invoice-0/WSFlexServiceBean',
-                params=UPC_SOAP_INVOICES_TPL % session_id,
-                headers=[('Content-Type',
-                          'text/xml; charset=utf-8'), ('SOAPAction', '""')]
-            )
-        )
+        self.get('/lista-efaktur')
 
-        for element in tree.xpath("//ns2:ClientInvoices", namespaces=UPC_XMLNS):
+        params = {
+            '_search': 'false',
+            'nd': int(time.time() * 1000.0),
+            'rows': 12,
+            'page': '1',
+            'sidx': 'id',
+            'sord': 'desc',
+        }
 
-            invoice_id = element.xpath(
-                "./ns4:invoiceId", namespaces=UPC_XMLNS)[0].text
-            invoice_number = element.xpath(
-                "./ns4:invoiceNumber", namespaces=UPC_XMLNS)[0].text
-            total_gross = element.xpath(
-                "./ns4:totalGross", namespaces=UPC_XMLNS)[0].text
+        res = self.get('/en/grid/invoices', params=params)
 
+        invoices_soup = BeautifulSoup(res.content, from_encoding=res.encoding)
+
+        for row in invoices_soup.find_all('row'):
+            invoice_id = row.id.text
+            invoice_number = row.number.text
+            total_gross = re.sub("[^0-9,]", "", row.amount.text).replace(',', '.')
             invoice = self.create_invoice(invoice_number, total_gross)
 
             if invoice:
-                self.save_document(
-                    invoice,
-                    self.get('/console/pdf?%s' % urllib.urlencode(
-                        {'sessionId': session_id, 'invoiceId': invoice_id}))
-                )
+                res = self.get('/pl/operations', params={'action': 'pdf', 'invoiceId': invoice_id})
+                self.save_document(invoice, res)

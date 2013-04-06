@@ -1,8 +1,7 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import patterns, url
 import pyinvoice.views
 
-urlpatterns = patterns(
-    '',
+urlpatterns = patterns('',
     url(r'^$', pyinvoice.views.ListCompaniesView.as_view(), name='companies',),
-    url(r'^invoices/(?P<company_id>\d)$', pyinvoice.views.ListInvoicesView.as_view(), name='invoices',),
+    url(r'^invoices/(?P<company_id>\d)/$', pyinvoice.views.ListInvoicesView.as_view(), name='invoices',),
 )

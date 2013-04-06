@@ -18,7 +18,7 @@
 			<td>
 				<ul class="unstyled">
 					{% for document in invoice.document_set.all %}
-					<li><i class="icon-arrow-right"></i> <a href="{{ document.document_file }}">{{ document.title }}</a></li>
+					<li><i class="icon-arrow-right"></i> <a href="{{ document.document_file.url }}">{{ document.title }}</a></li>
 					{% endfor %}
 				</ul>
 			</td>
@@ -35,11 +35,7 @@
 		{% else %}
 		<li class="prev disabled"><a href="#"><span>&laquo;</span></a></li>
 		{% endif %}
-
-
 		<li class="active"><a href="#">{{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</a></li>
-
-
 		{% if page_obj.has_next %}
 		<li class="next"><a href="?page={{ page_obj.next_page_number }}{{ getvars }}"><span>&raquo;</span></a></li>
 		{% else %}
@@ -48,5 +44,4 @@
 	</ul>
 </div>
 {% endif %}
-
 {% endblock %}

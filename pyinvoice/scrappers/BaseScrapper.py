@@ -5,14 +5,11 @@ from django.conf import settings
 from pyinvoice import models
 from django.core.files.base import ContentFile
 import uuid
-from lxml import etree
-import cookielib
-import urllib2
-import urllib
 import time
 import random
 from urlparse import urljoin
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +22,9 @@ class BaseScrapper(object):
     base_url = None
 
     def __init__(self):
-        self.cookie_jar = cookielib.CookieJar()
-        self.opener = urllib2.build_opener(
-            urllib2.HTTPCookieProcessor(self.cookie_jar))
+        self.session = requests.session()
 
-    def get(self, path, params=None, referer=None, headers=None):
+    def _wait(self):
         if settings.RANDOMIZE_REQUEST_DELAY:
             delay = random.uniform(
                 0.5 * settings.REQUEST_DELAY, 1.5 * settings.REQUEST_DELAY)
@@ -37,31 +32,18 @@ class BaseScrapper(object):
             delay = settings.REQUEST_DELAY
         time.sleep(delay)
 
-        if referer is not None:
-            self.referer = urljoin(self.base_url, referer)
-        if self.last_path is not None:
-            self.referer = urljoin(self.base_url, self.last_path)
-        self.opener.addheaders = [
-            ('User-Agent', self.user_agent),
-        ]
-        if headers is not None:
-            for header in headers:
-                self.opener.addheaders.append(header)
-        if self.referer is not None:
-            self.opener.addheaders.append(
-                ('Referer', urljoin(self.base_url, self.referer)))
-        self.last_path = path
-        data = None
-        if params is not None:
-            if isinstance(params, dict):
-                data = urllib.urlencode(params)
-            else:
-                data = params
-        if data is not None:
-            return  self.opener.open(urljoin(self.base_url, path), data)
-        return self.opener.open(urljoin(self.base_url, path))
+    def _url(self, path):
+        return urljoin(self.base_url, path)
 
-    def create_invoice(self, invoice_number, total_gross):
+    def get(self, path, *args, **kwargs):
+        self._wait()
+        return self.session.get(self._url(path), *args, **kwargs)
+
+    def post(self, path, *args, **kwargs):
+        self._wait()
+        return self.session.post(self._url(path), *args, **kwargs)
+
+    def create_invoice(self, invoice_number, total_gross, date=None):
         try:
             company = models.Company.objects.get(name=self.company_name)
         except models.Company.DoesNotExist:
@@ -79,6 +61,8 @@ class BaseScrapper(object):
             invoice.company = company
             invoice.number = invoice_number
             invoice.total_gross = total_gross
+            if date is not None:
+                invoice.date = date
             invoice.save()
 
         return invoice
@@ -88,6 +72,6 @@ class BaseScrapper(object):
         document.invoice = invoice
         document.title = title
         document.document_file.save(
-            '%s.pdf' % uuid.uuid4(), ContentFile(data.read()), save=True)
+            '%s.pdf' % uuid.uuid4(), ContentFile(data.content), save=True)
         document.save()
         logger.info("Downloaded file for invoice %s: %s (size: %s)", invoice.number, document.document_file.name, document.document_file.size)
