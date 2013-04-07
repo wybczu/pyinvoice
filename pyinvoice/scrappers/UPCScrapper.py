@@ -45,7 +45,7 @@ class UPCScrapper(BaseScrapper):
         params = {
             '_search': 'false',
             'nd': int(time.time() * 1000.0),
-            'rows': 12,
+            'rows': 10,
             'page': '1',
             'sidx': 'id',
             'sord': 'desc',
