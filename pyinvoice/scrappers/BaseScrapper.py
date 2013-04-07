@@ -1,15 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-from django.conf import settings
-from pyinvoice import models
-from django.core.files.base import ContentFile
 import uuid
 import time
 import random
-from urlparse import urljoin
 import logging
 import requests
+
+from django.core.files.base import ContentFile
+from django.conf import settings
+from urlparse import urljoin
+from pyinvoice import models
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +18,13 @@ logger = logging.getLogger(__name__)
 class BaseScrapper(object):
 
     user_agent = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.11) Gecko/20101012 Firefox/3.6.11'
-    referer = None
-    last_path = None  # domyslny referer
     base_url = None
 
     def __init__(self):
         self.session = requests.session()
+        self.session.headers.update(
+            {'User-Agent': settings.USER_AGENT, }
+        )
 
     def _wait(self):
         if settings.RANDOMIZE_REQUEST_DELAY:

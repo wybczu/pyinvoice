@@ -7,6 +7,7 @@ import logging
 
 
 class Command(BaseCommand):
+
     help = 'Downloads invoices'
 
     def _get_scrapper(self, name):

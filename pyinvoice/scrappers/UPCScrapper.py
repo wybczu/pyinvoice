@@ -1,12 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-import time
-from urlparse import urljoin
 import logging
-from BaseScrapper import BaseScrapper
+import time
 import re
+
 from bs4 import BeautifulSoup
+from BaseScrapper import BaseScrapper
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class UPCScrapper(BaseScrapper):
             }
         )
 
-        if not res.url == urljoin(self.base_url, 'ebok'):
+        if not res.url == self._url('ebok'):
             logger.error("I can't sign in :(")
             return
 

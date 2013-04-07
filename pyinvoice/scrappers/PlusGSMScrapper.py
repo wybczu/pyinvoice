@@ -27,15 +27,15 @@ class PlusGSMScrapper(BaseScrapper):
             'password': configuration['password'],
         }
 
-        r = self.post('/ebok-web/basic/loginStep2.action', payload)
+        res = self.post('/ebok-web/basic/loginStep2.action', payload)
 
-        if u'wystąpił błąd aplikacji' in r.content:
+        if res.url == self._url('ebok-web/basic/loginError.action'):
             logger.error("I can't sign in :(")
             return
 
-        r = self.get('/ebok-web/spectrum/payments/showPaymentsHistory.action')
+        res = self.get('/ebok-web/spectrum/payments/showPaymentsHistory.action')
 
-        soup = BeautifulSoup(r.content, from_encoding=r.encoding)
+        soup = BeautifulSoup(res.content, from_encoding=res.encoding)
         invoices_soup = soup.find("form", id="payForm")
 
         for row in invoices_soup.find_all("tr"):

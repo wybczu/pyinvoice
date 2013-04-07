@@ -11,26 +11,32 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'db.sqlite',                     # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'db.sqlite',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': '',
     }
 }
 
 TIME_ZONE = 'America/Chicago'
 LANGUAGE_CODE = 'en-us'
+
 SITE_ID = 1
-MEDIA_ROOT = ''
-MEDIA_URL = ''
-STATIC_ROOT = ''
+
+MEDIA_ROOT = 'documents/'
+MEDIA_URL = '/media/'
+
+STATIC_ROOT = 'static/'
 STATIC_URL = '/static/'
+
 SECRET_KEY = 'randomkey'
 
-INVOICE_SCRAPPERS = ['pyinvoice.scrappers.UPCScrapper',
-                     'pyinvoice.scrappers.PlusGSMScrapper']
+INVOICE_SCRAPPERS = [
+    'pyinvoice.scrappers.UPCScrapper',
+    'pyinvoice.scrappers.PlusGSMScrapper'
+]
 
 INVOICE_SCRAPPERS_CONFIGURATION = {
     'pyinvoice.scrappers.UPCScrapper': {
@@ -43,7 +49,7 @@ INVOICE_SCRAPPERS_CONFIGURATION = {
     }
 }
 
+USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:19.0) Gecko/20100101 Firefox/19.0 Iceweasel/19.0.2'
+
 RANDOMIZE_REQUEST_DELAY = True
 REQUEST_DELAY = 0.25
-
-BREADCRUMBS_HOME_TITLE = "Lista firm"
